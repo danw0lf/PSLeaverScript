@@ -17,7 +17,7 @@ $ManagerName=(Get-AdUser (Get-aduser $UserName -properties manager).manager -pro
 
 #Script
 #Pre-Disable - Gets AD Groups and Exports them to IT Dept\User Admin\Leavers then amends the description of the user to the date and who disabled the account
-(Get-ADUser $UserName –Properties MemberOf).memberof | Get-ADGroup | Select-Object name | Out-File "\\ctcmain\I\CTC Aviation Group plc\IT Dept\User Admin\Leavers\$($UserName).txt" -width 120 -Append
+(Get-ADUser $UserName –Properties MemberOf).memberof | Get-ADGroup | Select-Object name | Out-File "\\Path\$($UserName).txt" -width 120 -Append
 Set-ADUser $UserName -Description "Disabled on $Date by $env:UserName"
 
 #Remove Groups, Disable, Hide from GAL, Move to Disabled OU
