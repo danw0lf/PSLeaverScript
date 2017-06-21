@@ -1,30 +1,40 @@
-$choices = [System.Management.Automation.Host.ChoiceDescription[]] @("&Y","&N")
-while ( $true ) {
-
 #Prerequisites
 Import-Module ActiveDirectory
 Add-pssnapin Microsoft.Exchange.Management.PowerShell.E2010
+$PSEmailServer = "Exchange Server"
+
+$choices = [System.Management.Automation.Host.ChoiceDescription[]] @("&Y","&N")
+while ( $true ) {
 
 # User Input Parameters
-$AccountName = Read-Host -Prompt 'Enter account name to disable'
+$UserName = Read-Host -Prompt 'Enter username to disable'
 
 #Script Input Parameters
-$ADGroups = Get-ADPrincipalGroupMembership -Identity $accountName | where {$_.Name -ne "Domain Users"}
+$ADGroups = Get-ADPrincipalGroupMembership -Identity $UserName | where {$_.Name -ne "Domain Users"}
 $Date = Get-Date -format d
+$ManagerEmail=(Get-AdUser (Get-aduser $UserName -properties manager).manager -properties emailaddress).EmailAddress
+$ManagerName=(Get-AdUser (Get-aduser $UserName -properties manager).manager -properties cn).cn
 
 #Script
-#Pre-Disable - Gets AD Groups and Exports them to \\Path\ then amends the description of the user to the date and who disabled the account
-(Get-ADUser $AccountName –Properties MemberOf).memberof | Get-ADGroup | Select-Object name | Out-File "\\Path\$($accountName).txt" -width 120 -Append
-Set-ADUser $AccountName -Description "Disabled on $Date by $env:UserName"
+#Pre-Disable - Gets AD Groups and Exports them to IT Dept\User Admin\Leavers then amends the description of the user to the date and who disabled the account
+(Get-ADUser $UserName –Properties MemberOf).memberof | Get-ADGroup | Select-Object name | Out-File "\\ctcmain\I\CTC Aviation Group plc\IT Dept\User Admin\Leavers\$($UserName).txt" -width 120 -Append
+Set-ADUser $UserName -Description "Disabled on $Date by $env:UserName"
 
 #Remove Groups, Disable, Hide from GAL, Move to Disabled OU
 Remove-ADPrincipalGroupMembership -ErrorAction SilentlyContinue -Identity $accountName -MemberOf $ADGroups -Confirm:$false
-Disable-ADAccount -Identity $AccountName
-Set-Mailbox -Identity Domain\$AccountName -HiddenFromAddressListsEnabled $true
-Get-ADUser $AccountName | Move-ADObject -TargetPath 'OU=Users,OU=Disabled Objects,DC=local,DC=Domain'
+Disable-ADAccount -Identity $UserName
+Set-Mailbox -Identity domain\$UserName -HiddenFromAddressListsEnabled $true
+Get-ADUser $UserName | Move-ADObject -TargetPath 'OU=Users,OU=Disabled Objects,DC=local,DC=Domain'
+
+#Send email to their Line Manager
+Send-MailMessage -From "email" -Cc "email" -To "$ManagerEmail" -Subject "User Disabled - $AccountName" -Body "Hi $ManagerName,
+
+This is to inform you that $UserName has been successfully disabled. After 30 days we will fully delete their mailbox, documents and profile. Please make us aware during this time if you need access to any of their files.
+
+Kind regards,"
 
 #Prompt for Completion
-Write-Host 'The account has been terminated, disable their door access, and email their Line Manager'
+Write-Host 'The user has been terminated, disable their door access, and email their Line Manager'
 
 #Prompt to Repeat for another user?
 $choice = $Host.UI.PromptForChoice("Disable another user?","",$choices,0)
