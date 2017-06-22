@@ -38,7 +38,7 @@ This is to inform you that $DisplayName has been successfully disabled. After 30
 Kind regards,"
 
 #Prompt for Completion
-Write-Host 'The user has been terminated, disable their door access, and email their Line Manager'
+Write-Host 'The user has been terminated, proceed to disable their access to site.'
 
 #Prompt to Repeat for another user?
 $choice = $Host.UI.PromptForChoice("Disable another user?","",$choices,0)
