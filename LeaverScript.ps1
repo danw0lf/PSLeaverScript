@@ -17,11 +17,11 @@ $ManagerEmail=(Get-AdUser (Get-aduser $UserName -properties manager).manager -pr
 $ManagerName=(Get-AdUser (Get-aduser $UserName -properties manager).manager -properties cn).cn
 
 #Script
-#Pre-Disable - Gets AD Groups and Exports them to IT Dept\User Admin\Leavers
+#Pre-Disable - Gets AD Groups and Exports them to \\Server\Path
 #Amends the description of the user to the date and who disabled the account
 (Get-ADUser $UserName –Properties MemberOf).memberof |
 	Get-ADGroup | Select-Object name |
-	Out-File "\\ctcmain\I\CTC Aviation Group plc\IT Dept\User Admin\Leavers\$($UserName).txt" -width 120 -Append
+	Out-File "\\Server\Path\$($UserName).txt" -width 120 -Append
 Set-ADUser $UserName -Description "Disabled on $Date by $env:UserName"
 
 #Remove Groups, Disable, Hide from GAL, Move to Disabled OU
